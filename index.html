@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>موقع الشيخ محمد أمين الجابري - الأذكار الصحيحة</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Lateef:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #1a472a;
+            --secondary-color: #2e7d32;
+            --accent-color: #5d8c47;
+            --gold-color: #c9a145;
+            --light-color: #f8f5e9;
+            --dark-color: #0d2818;
+            --transition: all 0.3s ease;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Amiri', serif;
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            line-height: 1.8;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23f8f5e9" fill-opacity="1"/><path d="M0,0 L100,100 M100,0 L0,100" stroke="%23e8e5d9" stroke-width="0.5"/></svg>');
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* الترويسة */
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1.5rem 0;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo i {
+            font-size: 2.5rem;
+            color: var(--gold-color);
+        }
+
+        .logo h1 {
+            font-family: 'Lateef', serif;
+            font-size: 2.8rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .tagline {
+            font-size: 1.4rem;
+            opacity: 0.9;
+            margin-top: -10px;
+        }
+
+        /* شريط التنقل */
+        nav {
+            background-color: var(--accent-color);
+            margin-top: 1.5rem;
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            font-family: 'Amiri', serif;
+            font-size: 1.3rem;
+            padding: 1rem 1.8rem;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            outline: none;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .nav-btn::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 3px;
+            background-color: var(--gold-color);
+            transition: var(--transition);
+        }
+
+        .nav-btn.active::after, .nav-btn:hover::after {
+            width: 100%;
+        }
+
+        /* المحتوى الرئيسي */
+        main {
+            padding: 3rem 0;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        .section-title h2 {
+            font-family: 'Lateef', serif;
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            display: inline-block;
+            background-color: var(--light-color);
+            padding: 0 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 25px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold-color), transparent);
+            z-index: 1;
+        }
+
+        .dhikr-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .dhikr-card {
+            background: white;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .dhikr-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .dhikr-text {
+            padding: 25px;
+            font-size: 1.6rem;
+            line-height: 1.8;
+            text-align: center;
+            color: var(--dark-color);
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dhikr-counter {
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.3rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .counter-btn {
+            background-color: var(--gold-color);
+            color: var(--dark-color);
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            font-size: 1.4rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .counter-btn:hover {
+            transform: scale(1.1);
+            background-color: #e0b43a;
+        }
+
+        .counter-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .counter-label {
+            margin-left: 10px;
+            font-size: 1.2rem;
+        }
+
+        /* التذييل */
+        footer {
+            background: linear-gradient(135deg, var(--dark-color), var(--primary-color));
+            color: rgba(255, 255, 255, 0.8);
+            padding: 3rem 0 2rem;
+            text-align: center;
+            margin-top: 3rem;
+        }
+
+        .footer-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .footer-logo {
+            font-family: 'Lateef', serif;
+            font-size: 2.2rem;
+            margin-bottom: 1.5rem;
+            color: var(--gold-color);
+        }
+
+        .copyright {
+            font-size: 1.1rem;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* تأثيرات متقدمة */
+        .dhikr-card.completed {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dhikr-card.completed::after {
+            content: "✓";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(46, 125, 50, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: white;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .progress-bar {
+            height: 6px;
+            background-color: rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--gold-color);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        /* التجاوب مع الأجهزة المختلفة */
+        @media (max-width: 768px) {
+            .dhikr-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-container {
+                flex-direction: column;
+            }
+            
+            .logo h1 {
+                font-size: 2.2rem;
+            }
+            
+            .tagline {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- الترويسة -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-mosque"></i>
+                    <h1>موقع الشيخ محمد أمين الجابري</h1>
+                </div>
+                <div class="tagline">الأذكار الصحيحة الثابتة عن النبي صلى الله عليه وسلم</div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- شريط التنقل -->
+    <nav>
+        <div class="container">
+            <div class="nav-container">
+                <button class="nav-btn active" data-section="morning">أذكار الصباح</button>
+                <button class="nav-btn" data-section="evening">أذكار المساء</button>
+                <button class="nav-btn" data-section="sleep">أذكار النوم</button>
+                <button class="nav-btn" data-section="waking">أذكار الاستيقاظ</button>
+                <button class="nav-btn" data-section="prayer">أذكار الصلاة</button>
+                <button class="nav-btn" data-section="general">أذكار عامة</button>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- المحتوى الرئيسي -->
+    <main>
+        <div class="container">
+            <div class="section-title">
+                <h2>أذكار الصباح</h2>
+            </div>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress"></div>
+            </div>
+            
+            <div class="dhikr-container" id="dhikr-container">
+                <!-- سيتم ملئ هذا القسم بالاذكار باستخدام JavaScript -->
+            </div>
+        </div>
+    </main>
+    
+    <!-- التذييل -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">موقع الشيخ محمد أمين الجابري</div>
+                <p>الموقع المرجعي للأذكار الصحيحة الثابتة عن النبي صلى الله عليه وسلم</p>
+                <div class="copyright">
+                    &copy; 2023 جميع الحقوق محفوظة | موقع الشيخ محمد أمين الجابري
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // بيانات الأذكار
+        const adhkarData = {
+            morning: [
+                { text: "أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ", count: 1 },
+                { text: "اللّهُ لاَ إِلَـهَ إِلاَّ هُوَ الْحَيُّ الْقَيُّومُ لاَ تَأْخُذُهُ سِنَةٌ وَلاَ نَوْمٌ لَّهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الأَرْضِ مَن ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلاَّ بِإِذْنِهِ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ وَلاَ يُحِيطُونَ بِشَيْءٍ مِّنْ عِلْمِهِ إِلاَّ بِمَا شَاءَ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالأَرْضَ وَلاَ يَؤُودُهُ حِفْظُهُمَا وَهُوَ الْعَلِيُّ الْعَظِيمُ", count: 1 },
+                { text: "بِسْمِ اللهِ الرَّحْمنِ الرَّحِيمِ", count: 1 },
+                { text: "قُلْ هُوَ اللَّهُ أَحَدٌ (ثلاث مرات)", count: 3 },
+                { text: "قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ (ثلاث مرات)", count: 3 },
+                { text: "قُلْ أَعُوذُ بِرَبِّ النَّاسِ (ثلاث مرات)", count: 3 },
+                { text: "أَصْبَـحْـنا وَأَصْبَـحْ المُـلْكُ للهِ وَالحَمدُ للهِ، لا إلهَ إلاّ اللّهُ وَحدَهُ لا شَريكَ لهُ، لهُ المُـلكُ ولهُ الحَمْـد، وهُوَ على كلّ شَيءٍ قدير، رَبِّ أسْـأَلُـكَ خَـيرَ ما في هـذا اليوم وَخَـيرَ ما بَعْـدَه، وَأَعـوذُ بِكَ مِنْ شَـرِّ ما في هـذا اليوم وَشَرِّ ما بَعْـدَه، رَبِّ أَعـوذُبِكَ مِنَ الْكَسَـلِ وَسـوءِ الْكِـبَر، رَبِّ أَعـوذُبِكَ مِنْ عَـذابٍ في النّـارِ وَعَـذابٍ في القَـبْر", count: 1 },
+                { text: "اللّهُـمَّ بِكَ أَصْـبَحْنا وَبِكَ أَمْسَـينا ، وَبِكَ نَحْـيا وَبِكَ نَمُـوتُ وَإِلَـيْكَ النُّـشُور", count: 1 },
+                { text: "سُبْحـانَ اللهِ وَبِحَمْـدِهِ عَدَدَ خَلْـقِه ، وَرِضـا نَفْسِـه ، وَزِنَـةَ عَـرْشِـه ، وَمِـدادَ كَلِمـاتِـه", count: 3 }
+            ],
+            evening: [
+                { text: "أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ", count: 1 },
+                { text: "اللّهُ لاَ إِلَـهَ إِلاَّ هُوَ الْحَيُّ الْقَيُّومُ لاَ تَأْخُذُهُ سِنَةٌ وَلاَ نَوْمٌ لَّهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الأَرْضِ مَن ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلاَّ بِإِذْنِهِ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ وَلاَ يُحِيطُونَ بِشَيْءٍ مِّنْ عِلْمِهِ إِلاَّ بِمَا شَاءَ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالأَرْضَ وَلاَ يَؤُودُهُ حِفْظُهُمَا وَهُوَ الْعَلِيُّ الْعَظِيمُ", count: 1 },
+                { text: "بِسْمِ اللهِ الرَّحْمنِ الرَّحِيمِ", count: 1 },
+                { text: "قُلْ هُوَ اللَّهُ أَحَدٌ (ثلاث مرات)", count: 3 },
+                { text: "قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ (ثلاث مرات)", count: 3 },
+                { text: "قُلْ أَعُوذُ بِرَبِّ النَّاسِ (ثلاث مرات)", count: 3 },
+                { text: "أَمْسَيْـنا وَأَمْسـى المُـلْكُ للهِ وَالحَمدُ للهِ، لا إلهَ إلاّ اللّهُ وَحدَهُ لا شَريكَ لهُ، لهُ المُـلكُ ولهُ الحَمْـد، وهُوَ على كلّ شَيءٍ قدير، رَبِّ أسْـأَلُـكَ خَـيرَ ما في هـذهِ اللَّـيْلَةِ وَخَـيرَ ما بَعْـدَهـا، وَأَعـوذُ بِكَ مِنْ شَـرِّ ما في هـذهِ اللَّـيْلةِ وَشَرِّ ما بَعْـدَهـا، رَبِّ أَعـوذُبِكَ مِنَ الْكَسَـلِ وَسـوءِ الْكِـبَر، رَبِّ أَعـوذُبِكَ مِنْ عَـذابٍ في النّـارِ وَعَـذابٍ في القَـبْر", count: 1 },
+                { text: "اللّهُـمَّ بِكَ أَمْسَـينا وَبِكَ أَصْـبَحْنا، وَبِكَ نَحْـيا وَبِكَ نَمُـوتُ وَإِلَـيْكَ المَصِير", count: 1 },
+                { text: "سُبْحـانَ اللهِ وَبِحَمْـدِهِ عَدَدَ خَلْـقِه ، وَرِضـا نَفْسِـه ، وَزِنَـةَ عَـرْشِـه ، وَمِـدادَ كَلِمـاتِـه", count: 3 }
+            ],
+            sleep: [
+                { text: "بِاسْمِكَ رَبِّـي وَضَعْـتُ جَنْـبي، وَبِكَ أَرْفَعُـه، فَإِن أَمْسَـكْتَ نَفْسـي فارْحَـمْها، وَإِنْ أَرْسَلْتَـها فاحْفَظْـها بِمـا تَحْفَـظُ بِه عِبـادَكَ الصّـالِحـين", count: 1 },
+                { text: "اللّهُـمَّ إِنَّـكَ خَلَـقْتَ نَفْسـي وَأَنْـتَ تَوَفّـاهـا لَكَ ممَـاتـها وَمَحْـياها، إِنْ أَحْيَيْـتَها فاحْفَظْـها، وَإِنْ أَمَتَّـها فَاغْفِـرْ لَـها. اللّهُـمَّ إِنَّـي أَسْـأَلُـكَ العـافِـيَة", count: 1 },
+                { text: "اللّهُـمَّ قِنـي عَذابَـكَ يَـوْمَ تَبْـعَثُ عِبـادَك", count: 3 },
+                { text: "بِاسْـمِكَ اللّهُـمَّ أَمـوتُ وَأَحْـيا", count: 1 },
+                { text: "الـحَمْدُ للهِ الَّذي أَطْـعَمَنا وَسَقـانا، وَكَفـانا، وَآوانا، فَكَـمْ مِمَّـنْ لا كـافِيَ لَـهُ وَلا مُـؤْوي", count: 1 },
+                { text: "اللّهُـمَّ عالِـمَ الغَـيبِ وَالشّـهادةِ فاطِـرَ السّماواتِ وَالأرْضِ رَبَّ كُـلِّ شَـيءٍ وَمَليـكَه، أَشْهَـدُ أَنْ لا إِلـهَ إِلاّ أَنْت، أَعـوذُ بِكَ مِن شَـرِّ نَفْسـي، وَمِن شَـرِّ الشَّيْـطانِ وَشِرْكِه، وَأَنْ أَقْتَـرِفَ عَلـى نَفْسـي سوءاً أَوْ أَجُـرَّهُ إِلـى مُسْـلِم", count: 1 }
+            ],
+            waking: [
+                { text: "الحَمْـدُ لِلّهِ الّذي أَحْـيانا بَعْـدَ ما أَماتَـنا وَإليه النُّـشور", count: 1 },
+                { text: "لا إلهَ إلاّ اللّهُ وَحْـدَهُ لا شَـريكَ له، لهُ المُلـكُ ولهُ الحَمـد، وهوَ على كلّ شيءٍ قدير، سُـبْحانَ اللهِ، والحَمْـدُ لله، ولا إلهَ إلاّ اللهُ واللهُ أكبَر، وَلا حَولَ وَلا قوّة إلاّ باللّهِ العليّ العظيم. رَبِّ اغْفِرْ لي", count: 1 },
+                { text: "الحمدُ للهِ الذي عافاني في جَسَدي وَرَدّ عَليّ روحي وَأَذِنَ لي بِذِكْرِه", count: 1 },
+                { text: "اللّهُـمَّ بِكَ أَصْـبَحْنا وَبِكَ أَمْسَـينا ، وَبِكَ نَحْـيا وَبِكَ نَمُـوتُ وَإِلَـيْكَ النُّـشُور", count: 1 }
+            ],
+            prayer: [
+                { text: "سُبْحَانَكَ اللَّهُمَّ وَبِحَمْدِكَ، وَتَبَارَكَ اسْمُكَ، وَتَعَالَى جَدُّكَ، وَلاَ إِلَهَ غَيْرُكَ", count: 1 },
+                { text: "أعوذ بالله من الشيطان الرجيم", count: 1 },
+                { text: "اللَّهُ أَكْبَرُ كَبِيرًا، وَالْحَمْدُ لِلَّهِ كَثِيرًا، وَسُبْحَانَ اللَّهِ بُكْرَةً وَأَصِيلًا", count: 3 },
+                { text: "سُبْحَانَ رَبِّيَ الْعَظِيمِ", count: 3 },
+                { text: "سَمِعَ اللَّهُ لِمَنْ حَمِدَهُ", count: 1 },
+                { text: "رَبَّنَا وَلَكَ الْحَمْدُ حَمْدًا كَثِيرًا طَيِّبًا مُبَارَكًا فِيهِ", count: 1 },
+                { text: "سُبْحَانَ رَبِّيَ الْأَعْلَى", count: 3 },
+                { text: "رَبِّ اغْفِرْ لِي", count: 3 }
+            ],
+            general: [
+                { text: "سُبْحَانَ اللَّهِ", count: 100 },
+                { text: "الْحَمْدُ لِلَّهِ", count: 100 },
+                { text: "اللَّهُ أَكْبَرُ", count: 100 },
+                { text: "لاَ إِلَهَ إِلاَّ اللَّهُ", count: 100 },
+                { text: "أَسْتَغْفِرُ اللَّهَ", count: 100 },
+                { text: "لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ", count: 100 },
+                { text: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ", count: 100 },
+                { text: "سُبْحَانَ اللَّهِ الْعَظِيمِ", count: 100 }
+            ]
+        };
+
+        // تهيئة الموقع
+        document.addEventListener('DOMContentLoaded', function() {
+            // عرض أذكار الصباح عند التحميل
+            renderAdhkar('morning');
+            
+            // إضافة مستمعين لأزرار التنقل
+            const navButtons = document.querySelectorAll('.nav-btn');
+            navButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // إزالة الفعالية من جميع الأزرار
+                    navButtons.forEach(btn => btn.classList.remove('active'));
+                    
+                    // إضافة الفعالية للزر المحدد
+                    this.classList.add('active');
+                    
+                    // عرض الأذكار الخاصة بالقسم المحدد
+                    const section = this.getAttribute('data-section');
+                    renderAdhkar(section);
+                    
+                    // تحديث عنوان القسم
+                    updateSectionTitle(section);
+                });
+            });
+        });
+
+        // تحديث عنوان القسم
+        function updateSectionTitle(section) {
+            const titles = {
+                morning: "أذكار الصباح",
+                evening: "أذكار المساء",
+                sleep: "أذكار النوم",
+                waking: "أذكار الاستيقاظ",
+                prayer: "أذكار الصلاة",
+                general: "أذكار عامة"
+            };
+            
+            document.querySelector('.section-title h2').textContent = titles[section];
+        }
+
+        // عرض الأذكار
+        function renderAdhkar(section) {
+            const container = document.getElementById('dhikr-container');
+            container.innerHTML = '';
+            
+            const adhkar = adhkarData[section];
+            
+            adhkar.forEach((dhikr, index) => {
+                const card = document.createElement('div');
+                card.className = 'dhikr-card';
+                card.dataset.index = index;
+                card.dataset.originalCount = dhikr.count;
+                card.dataset.currentCount = dhikr.count;
+                
+                card.innerHTML = `
+                    <div class="dhikr-text">${dhikr.text}</div>
+                    <div class="dhikr-counter">
+                        <button class="counter-btn" onclick="decrementCount(${index})">-</button>
+                        <div class="counter-number">${dhikr.count}</div>
+                        <div class="counter-label">مرة</div>
+                        <button class="counter-btn" onclick="resetCount(${index})"><i class="fas fa-redo"></i></button>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+            
+            // تحديث شريط التقدم
+            updateProgressBar();
+        }
+
+        // تقليل العدد عند الضغط
+        window.decrementCount = function(index) {
+            const card = document.querySelector(`.dhikr-card[data-index="${index}"]`);
+            let currentCount = parseInt(card.dataset.currentCount);
+            
+            if (currentCount > 1) {
+                currentCount--;
+                card.dataset.currentCount = currentCount;
+                card.querySelector('.counter-number').textContent = currentCount;
+            } else {
+                currentCount = 0;
+                card.classList.add('completed');
+                card.querySelector('.counter-number').textContent = '0';
+                setTimeout(() => {
+                    card.classList.remove('completed');
+                    resetCount(index);
+                }, 1500);
+            }
+            
+            // تحديث شريط التقدم
+            updateProgressBar();
+        }
+
+        // إعادة تعيين العدد
+        window.resetCount = function(index) {
+            const card = document.querySelector(`.dhikr-card[data-index="${index}"]`);
+            const originalCount = parseInt(card.dataset.originalCount);
+            
+            card.dataset.currentCount = originalCount;
+            card.querySelector('.counter-number').textContent = originalCount;
+            
+            // تحديث شريط التقدم
+            updateProgressBar();
+        }
+
+        // تحديث شريط التقدم
+        function updateProgressBar() {
+            const cards = document.querySelectorAll('.dhikr-card');
+            let completed = 0;
+            
+            cards.forEach(card => {
+                const current = parseInt(card.dataset.currentCount);
+                const original = parseInt(card.dataset.originalCount);
+                
+                if (current === 0) {
+                    completed++;
+                }
+            });
+            
+            const progress = (completed / cards.length) * 100;
+            document.querySelector('.progress-fill').style.width = `${progress}%`;
+        }
+    </script>
+</body>
+</html>
