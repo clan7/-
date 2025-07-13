@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة مرضى العلاج الطبيعي – الإصدار المُحسَّن</title>
+
+    <!--  Tailwind & Font-Awesome  -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!--  Dexie / Chart.js / FileSaver  -->
+    <script src="https://cdn.jsdelivr.net/npm/dexie@3.2.2/dist/dexie.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+
+    <style>
+        /*  متغيرات الألوان  */
+        :root {
+            --primary:   #1a56db;
+            --secondary: #0e9f6e;
+            --accent:    #9061f9;
+            --dark:      #1f2937;
+            --light:     #f9fafb;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f3f4f6;
+            direction: rtl;
+            overflow-x: hidden;
+        }
+
+        /*  الشريط الجانبي  */
+        .sidebar {
+            transition: all .3s ease;
+            z-index: 50;
+            box-shadow: 0 4px 6px rgba(0,0,0,.1);
+        }
+        @media (max-width:768px){
+            .sidebar{position:fixed;left:-100%;top:0;height:100vh}
+            .sidebar.active{left:0}
+        }
+
+        /*  Overlay للهاتف  */
+        .overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:40}
+        .overlay.active{display:block}
+
+        /*  العناصر النشطة  */
+        .nav-item{transition:all .3s;border-radius:.5rem}
+        .nav-item.active{background:var(--primary)}
+
+        /*  أقسام الصفحة  */
+        .section{display:none}
+        .section.active{display:block;animation:fadeIn .5s}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+        /*  Toast  */
+        .toast{position:fixed;bottom:20px;right:20px;z-index:1000;padding:15px 25px;border-radius:8px;color:#fff;display:flex;align-items:center;animation:slideIn .3s,fadeOut .5s 2.5s forwards}
+        .toast.success{background:var(--secondary)}
+        .toast.error{background:#e02424}
+        @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+        @keyframes fadeOut{from{opacity:1}to{opacity:0}}
+    </style>
+</head>
+<body class="flex flex-col min-h-screen bg-gray-100">
+
+<!-- شاشة التحميل -->
+<div id="loadingScreen" class="fixed inset-0 flex items-center justify-center bg-white bg-opacity-95 z-50">
+    <div class="text-center">
+        <div class="spinner border-4 border-gray-200 border-t-4 border-t-blue-600 w-12 h-12 rounded-full animate-spin mx-auto mb-4"></div>
+        <p class="text-xl font-bold text-gray-700">جاري تحميل النظام…</p>
+    </div>
+</div>
+
+<!-- رأس الصفحة -->
+<header class="bg-gradient-to-r from-blue-700 to-blue-900 text-white shadow-lg">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+        <div class="flex items-center space-x-4">
+            <button id="sidebarToggle" class="md:hidden text-xl"><i class="fas fa-bars"></i></button>
+            <h1 class="text-2xl font-bold flex items-center"><i class="fas fa-heartbeat ml-2"></i>نظام إدارة مرضى العلاج الطبيعي</h1>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div id="currentDateTime" class="bg-blue-600 px-3 py-1 rounded-lg text-sm"></div>
+        </div>
+    </div>
+</header>
+
+<div class="flex flex-1">
+    <!-- الشريط الجانبي -->
+    <aside class="sidebar bg-blue-800 text-white w-64 min-h-screen py-4 hidden md:block">
+        <nav class="space-y-1 px-4">
+            <a href="#" data-section="dashboard" class="nav-item flex items-center px-4 py-3 bg-blue-700 active"><i class="fas fa-home ml-3"></i><span>الرئيسية</span></a>
+            <a href="#" data-section="patients" class="nav-item flex items-center px-4 py-3"><i class="fas fa-users ml-3"></i><span>المرضى</span><span id="patientsCount" class="bg-blue-600 text-xs px-2 py-1 rounded-full mr-auto">0</span></a>
+            <a href="#" data-section="appointments" class="nav-item flex items-center px-4 py-3"><i class="fas fa-calendar-alt ml-3"></i><span>المواعيد</span></a>
+            <a href="#" data-section="reports" class="nav-item flex items-center px-4 py-3"><i class="fas fa-chart-bar ml-3"></i><span>التقارير</span></a>
+        </nav>
+    </aside>
+
+    <!-- المحتوى -->
+    <main class="flex-1 p-4 md:p-6">
+        <div class="container mx-auto">
+            <!-- لوحة التحكم -->
+            <section id="dashboard" class="section active">
+                <h2 class="text-xl font-bold mb-4 flex items-center"><i class="fas fa-tachometer-alt ml-2 text-blue-600"></i>لوحة التحكم</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white rounded-xl shadow p-4 flex items-center">
+                        <div class="bg-blue-100 p-3 rounded-lg ml-4"><i class="fas fa-users text-blue-600 text-2xl"></i></div>
+                        <div><p class="text-gray-500">إجمالي المرضى</p><p id="totalPatients" class="text-2xl font-bold">0</p></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- إدارة المرضى -->
+            <section id="patients" class="section">
+                <div class="bg-white rounded-xl shadow overflow-hidden">
+                    <div class="px-6 py-4 border-b flex justify-between items-center flex-wrap">
+                        <h2 class="text-xl font-bold">إدارة المرضى</h2>
+                        <button id="addPatientBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center mt-2 md:mt-0"><i class="fas fa-plus ml-2"></i>إضافة مريض</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="py-3 px-6 text-right text-xs font-medium text-gray-500 uppercase">المريض</th>
+                                    <th class="py-3 px-6 text-right text-xs font-medium text-gray-500 uppercase">العمر</th>
+                                    <th class="py-3 px-6 text-right text-xs font-medium text-gray-500 uppercase">التشخيص</th>
+                                    <th class="py-3 px-6 text-right text-xs font-medium text-gray-500 uppercase">تاريخ الإضافة</th>
+                                    <th class="py-3 px-6 text-right text-xs font-medium text-gray-500 uppercase">إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="patientsTableBody" class="bg-white divide-y divide-gray-200">
+                                <tr><td colspan="5" class="py-8 text-center text-gray-500"><i class="fas fa-users-slash text-3xl mb-2"></i><p>لا يوجد مرضى</p></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- … يمكن إضافة الأقسام الأخرى بنفس الطريقة … -->
+        </div>
+    </main>
+</div>
+
+<!-- Overlay للجوال -->
+<div id="overlay" class="overlay"></div>
+
+<!-- نافذة إضافة مريض -->
+<div id="addPatientModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b flex justify-between items-center"><h3 class="text-xl font-bold">إضافة مريض جديد</h3><button id="closeModal" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button></div>
+        <div class="p-6">
+            <form id="patientForm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div><label class="block text-gray-700 mb-2">الاسم الكامل *</label><input id="fullName" type="text" required class="w-full border rounded-lg px-4 py-2"></div>
+                    <div><label class="block text-gray-700 mb-2">تاريخ الميلاد *</label><input id="birthDate" type="date" required class="w-full border rounded-lg px-4 py-2"></div>
+                    <div><label class="block text-gray-700 mb-2">الجنس *</label><select id="gender" required class="w-full border rounded-lg px-4 py-2"><option value="">اختر</option><option value="ذكر">ذكر</option><option value="أنثى">أنثى</option></select></div>
+                    <div><label class="block text-gray-700 mb-2">رقم الهاتف *</label><input id="phone" type="tel" required class="w-full border rounded-lg px-4 py-2"></div>
+                    <div><label class="block text-gray-700 mb-2">البريد الإلكتروني</label><input id="email" type="email" class="w-full border rounded-lg px-4 py-2"></div>
+                    <div><label class="block text-gray-700 mb-2">المؤمن (إن وجد)</label><input id="insurance" type="text" class="w-full border rounded-lg px-4 py-2"></div>
+                </div>
+                <div class="mb-6"><label class="block text-gray-700 mb-2">التشخيص *</label><textarea id="diagnosis" rows="3" required class="w-full border rounded-lg px-4 py-2"></textarea></div>
+                <div class="mb-6"><label class="block text-gray-700 mb-2">عدد الجلسات المتوقعة *</label><input id="sessions" type="number" min="1" value="10" required class="w-full border rounded-lg px-4 py-2"></div>
+
+                <!-- صور المريض -->
+                <div class="mb-6"><label class="block text-gray-700 mb-2">صور المريض (اختياري)</label><input id="patientImages" type="file" accept="image/*" capture="environment" multiple class="w-full border rounded-lg px-4 py-2"></div>
+
+                <div class="flex justify-end space-x-3"><button type="button" id="cancelAdd" class="px-6 py-2 border rounded-lg text-gray-700 hover:bg-gray-100">إلغاء</button><button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center"><i class="fas fa-save ml-2"></i>حفظ</button></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+//================= قاعدة البيانات =================
+const db = new Dexie('PhysicalTherapyDB');
+db.version(1).stores({
+    patients:    '++id, fullName, createdAt',
+    documents:   '++id, patientId, createdAt',
+    appointments:'++id, patientId, date'
+});
+
+//================= الحالة ================
+const appState = {
+    currentSection: 'dashboard',
+    patients: [],
+    filteredPatients: [],
+    currentPage: 1,
+    patientsPerPage: 10,
+    currentPatientId: null
+};
+
+//================= عناصر DOM ================
+let el;
+function cacheDOM(){
+    el = {
+        sidebarToggle:      document.getElementById('sidebarToggle'),
+        overlay:            document.getElementById('overlay'),
+        navItems:           document.querySelectorAll('.nav-item'),
+        addPatientBtn:      document.getElementById('addPatientBtn'),
+        addPatientModal:    document.getElementById('addPatientModal'),
+        closeModal:         document.getElementById('closeModal'),
+        cancelAdd:          document.getElementById('cancelAdd'),
+        patientForm:        document.getElementById('patientForm'),
+        patientImages:      document.getElementById('patientImages'),
+        patientsTableBody:  document.getElementById('patientsTableBody'),
+        patientsCount:      document.getElementById('patientsCount'),
+        totalPatients:      document.getElementById('totalPatients'),
+        loadingScreen:      document.getElementById('loadingScreen'),
+        currentDateTime:    document.getElementById('currentDateTime')
+    };
+}
+
+//================= وظائف مساعدة ================
+const closeSidebarForMobile = () => {
+    if(window.innerWidth<=768){document.querySelector('.sidebar').classList.remove('active');el.overlay.classList.remove('active');}
+};
+
+function showToast(msg, type='success'){
+    const t=document.createElement('div');t.className=`toast ${type}`;t.innerHTML=`<i class="fas ${type==='success'?'fa-check-circle':'fa-exclamation-circle'} ml-2"></i>${msg}`;document.body.appendChild(t);setTimeout(()=>t.remove(),3000);
+}
+
+function fileToBase64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});}
+
+function calculateAge(birth){const d=new Date(birth);const t=new Date();let a=t.getFullYear()-d.getFullYear();const m=t.getMonth()-d.getMonth();if(m<0||(m===0&&t.getDate()<d.getDate()))a--;return a;}
+
+function formatDate(d){return new Date(d).toLocaleDateString('ar-EG');}
+
+//================= تحميل التطبيق ================
+async function init(){
+    cacheDOM();
+    updateDateTime();setInterval(updateDateTime,60000);
+
+    await db.open();
+    await seedData();
+    await loadPatients();
+    setupEvents();
+
+    el.loadingScreen.style.display='none';
+}
+
+function updateDateTime(){el.currentDateTime.textContent=new Date().toLocaleString('ar-EG',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});}
+
+//================= بيانات أولية ================
+async function seedData(){if(await db.patients.count()===0){await db.patients.bulkAdd([{fullName:'علي أحمد',birthDate:'1985-05-15',gender:'ذكر',phone:'0500000000',diagnosis:'آلام الظهر',sessions:10,createdAt:new Date()}]);}}
+
+//================= تحميل المرضى ================
+async function loadPatients(){appState.patients=await db.patients.reverse().sortBy('createdAt');appState.filteredPatients=[...appState.patients];renderPatientsTable();}
+
+function renderPatientsTable(){el.patientsTableBody.innerHTML='';if(!appState.filteredPatients.length){el.patientsTableBody.innerHTML='<tr><td colspan="5" class="py-8 text-center text-gray-500">لا يوجد بيانات</td></tr>';return;}
+    appState.filteredPatients.forEach(p=>{
+        const avatar=p.avatar?p.avatar:`https://ui-avatars.com/api/?name=${encodeURIComponent(p.fullName)}&background=1a56db&color=fff`;
+        const row=document.createElement('tr');
+        row.innerHTML=`<td class="py-4 px-6 flex items-center"><img class="h-10 w-10 rounded-full ml-3" src="${avatar}"><span>${p.fullName}</span></td><td class="py-4 px-6 text-sm text-gray-500">${calculateAge(p.birthDate)}</td><td class="py-4 px-6 text-sm">${p.diagnosis}</td><td class="py-4 px-6 text-sm text-gray-500">${formatDate(p.createdAt)}</td><td class="py-4 px-6 text-sm"><button class="text-red-600 delete-patient" data-id="${p.id}"><i class="fas fa-trash"></i></button></td>`;
+        el.patientsTableBody.appendChild(row);
+    });
+    el.patientsCount.textContent=appState.patients.length;el.totalPatients.textContent=appState.patients.length;
+    document.querySelectorAll('.delete-patient').forEach(b=>b.addEventListener('click',()=>deletePatient(b.dataset.id)));
+}
+
+async function deletePatient(id){if(!confirm('حذف المريض؟'))return;await db.patients.delete(parseInt(id));await loadPatients();showToast('تم الحذف','success');}
+
+//================= رفع مستند =================
+async function uploadDocument(){if(!appState.currentPatientId)return showToast('اختر مريضاً','error');const file=document.getElementById('fileInput').files[0];if(!file)return showToast('اختر ملف','error');const base64=await fileToBase64(file);await db.documents.add({patientId:appState.currentPatientId,name:file.name,type:document.getElementById('documentType').value,description:document.getElementById('documentDescription').value,fileData:base64,createdAt:new Date()});showToast('تم الرفع');loadDocumentsForPatient(appState.currentPatientId);} 
+
+//================= تحميل المستندات =================
+async function loadDocumentsForPatient(pid){const docs=await db.documents.where('patientId').equals(parseInt(pid)).toArray();const list=document.getElementById('documentsList');if(!list)return; if(!docs.length){list.innerHTML='<div class="text-center py-8 text-gray-500">لا توجد مستندات</div>';return;}list.innerHTML=docs.map(d=>`<div class="bg-white rounded-lg border p-4 flex justify-between items-center"><div><div class="font-bold">${d.name}</div><div class="text-gray-600">${formatDate(d.createdAt)}</div></div><a href="${d.fileData}" download="${d.name}" class="text-blue-600"><i class="fas fa-download"></i></a></div>`).join('');}
+
+//================= إضافة / تحديث مريض =================
+async function addPatient(data){data.createdAt=new Date();const id=await db.patients.add(data);await loadPatients();showToast('تم الحفظ');return id;}
+async function updatePatient(id,data){await db.patients.update(parseInt(id),data);await loadPatients();showToast('تم التحديث');}
+
+//================= أحداث =================
+function setupEvents(){
+    // القائمة الجانبية
+    el.sidebarToggle.addEventListener('click',()=>{document.querySelector('.sidebar').classList.toggle('active');el.overlay.classList.toggle('active');});
+    el.overlay.addEventListener('click',()=>{document.querySelector('.sidebar').classList.remove('active');el.overlay.classList.remove('active');});
+
+    // التنقل بين الأقسام
+    el.navItems.forEach(item=>item.addEventListener('click',e=>{e.preventDefault();el.navItems.forEach(n=>n.classList.remove('active','bg-blue-700'));item.classList.add('active','bg-blue-700');const sec=item.dataset.section;document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById(sec).classList.add('active');appState.currentSection=sec;closeSidebarForMobile();}));
+
+    // فتح نافذة إضافة مريض
+    el.addPatientBtn.addEventListener('click',()=>{el.patientForm.reset();document.getElementById('patientIdInput')?.remove();el.addPatientModal.classList.remove('hidden');});
+
+    // إغلاق النافذة
+    [el.closeModal,el.cancelAdd].forEach(b=>b.addEventListener('click',()=>{el.addPatientModal.classList.add('hidden');}));
+    el.addPatientModal.addEventListener('click',e=>{if(e.target===el.addPatientModal)el.addPatientModal.classList.add('hidden');});
+
+    // حفظ المريض
+    el.patientForm.addEventListener('submit',async e=>{
+        e.preventDefault();
+        const data={fullName:fullName.value,birthDate:birthDate.value,gender:gender.value,phone:phone.value,email:email.value,insurance:insurance.value,diagnosis:diagnosis.value,sessions:parseInt(sessions.value)};
+        // صور
+        const files=[...el.patientImages.files]; if(files.length){data.avatar=await fileToBase64(files[0]);}
+        const pid=document.getElementById('patientIdInput')?.value;
+        if(pid){await updatePatient(pid,data);}else{const newId=await addPatient(data); if(files.length){for(const f of files){await db.documents.add({patientId:newId,name:f.name,type:'صورة',description:'صورة مريض',fileData:await fileToBase64(f),createdAt:new Date()});}}}
+        el.addPatientModal.classList.add('hidden');
+    });
+
+    // زر رفع مستند (داخل تبويب المستندات)
+    const uploadBtn=document.getElementById('uploadDocumentBtn');if(uploadBtn)uploadBtn.addEventListener('click',uploadDocument);
+}
+
+//================= ابدأ =================
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
