@@ -225,6 +225,16 @@
       font-size: 0.8rem;
       color: #666;
     }
+
+    /* ----------------------------------------------------
+       Statistics & Image Preview Styles
+    ----------------------------------------------------*/
+    .stats { display:flex; gap:20px; flex-wrap:wrap; margin-top:20px; }
+    .stat-card { background:#fff; padding:15px 25px; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); text-align:center; min-width:120px; }
+    .stat-card h3 { font-size:1.5rem; color:#0059b3; margin-bottom:5px; }
+    .img-preview { width:100%; margin-top:10px; border-radius:6px; display:none; }
+    @keyframes zoomIn { from {transform:scale(0.8); opacity:0;} to {transform:scale(1); opacity:1;} }
+    .modal { animation: zoomIn 0.25s ease-out; }
   </style>
 </head>
 <body>
@@ -261,6 +271,15 @@
         تهدف هذه المنصة إلى تجميع وإدارة المعلومات المتعلقة بممارسة العلاج الطبيعي في اليمن، من مراكز ومستشفيات وأخصائيين وبحوث ودورات وأجهزة.
       </p>
       <img src="https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=800&q=60" alt="Physiotherapy" style="width:100%;border-radius:8px;margin-top:15px;">
+
+      <!-- إحصائيات سريعة -->
+      <div id="statsCards" class="stats">
+        <div class="stat-card"><h3 id="statCenters">0</h3><p>المراكز</p></div>
+        <div class="stat-card"><h3 id="statResearch">0</h3><p>البحوث</p></div>
+        <div class="stat-card"><h3 id="statCourses">0</h3><p>المقررات</p></div>
+        <div class="stat-card"><h3 id="statEquipment">0</h3><p>الأجهزة</p></div>
+      </div>
+      <canvas id="mainChart" height="120" style="margin-top:25px"></canvas>
     </section>
 
     <!-- Centers Section -->
@@ -313,6 +332,65 @@
 
     function save(key, data) {
       localStorage.setItem(key, JSON.stringify(data));
+      updateStats();
+    }
+
+    /* ----------------------------------------------------
+       Statistics & Charts
+    ----------------------------------------------------*/
+    function updateStats() {
+      document.getElementById('statCenters').textContent = centers.length;
+      document.getElementById('statResearch').textContent = research.length;
+      document.getElementById('statCourses').textContent = courses.length;
+      document.getElementById('statEquipment').textContent = equipment.length;
+
+      const labels = ['المراكز','البحوث','المقررات','الأجهزة'];
+      const dataArr = [centers.length, research.length, courses.length, equipment.length];
+      if (window.mainChartInstance) {
+        window.mainChartInstance.data.datasets[0].data = dataArr;
+        window.mainChartInstance.update();
+      } else {
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        window.mainChartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{ data: dataArr, backgroundColor: ['#0059b3','#0073e6','#3399ff','#66b3ff'] }]
+          },
+          options: { plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+        });
+      }
+    }
+
+    /* ----------------------------------------------------
+       Image Preview Helper
+    ----------------------------------------------------*/
+    function attachImagePreview(fileInput, imgEl) {
+      if (!fileInput) return;
+      fileInput.addEventListener('change', () => {
+        const file = fileInput.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          imgEl.src = ev.target.result;
+          imgEl.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    /* ----------------------------------------------------
+       Arabic Validation Helper
+    ----------------------------------------------------*/
+    function applyArabicValidation(form) {
+      form.querySelectorAll('input, textarea').forEach(inp => {
+        inp.addEventListener('invalid', () => {
+          if (inp.validity.valueMissing) inp.setCustomValidity('الرجاء ملء هذا الحقل');
+          else if (inp.validity.patternMismatch) inp.setCustomValidity('الرجاء إدخال البيانات بالصيغ الصحيحة');
+          else inp.setCustomValidity('');
+        });
+        inp.addEventListener('input', () => inp.setCustomValidity(''));
+      });
     }
 
     /* ---------------------------------------------
@@ -388,6 +466,7 @@
     function showCenterDetails(idx) {
       const c = centers[idx];
       const html = `
+        ${c.image ? `<img src="${c.image}" style="width:100%;border-radius:6px;margin-bottom:10px;"/>` : ''}
         <h3>${c.name}</h3>
         <p><strong>المدينة:</strong> ${c.city}</p>
         <p><strong>العنوان:</strong> ${c.address}</p>
@@ -413,12 +492,23 @@
           <input required name="phone" placeholder="الهاتف" pattern="[0-9+\- ]{7,15}" title="أدخل رقم هاتف صالح">
           <label>الأجهزة (افصل بفواصل)</label>
           <textarea name="devices" placeholder="الأجهزة المتوفرة"></textarea>
+          <label>صورة المركز</label>
+          <input type="file" name="image" accept="image/*" id="centerImageInp">
+          <img id="centerImagePreview" class="img-preview">
           <button type="submit" class="primary-btn">حفظ</button>
         </form>
         <button onclick="closeModal()" class="primary-btn" style="background:#ccc;color:#000;margin-top:10px;">إلغاء</button>
       `;
       showModal(html);
-      document.getElementById('centerForm').addEventListener('submit', e => {
+      const formEl = document.getElementById('centerForm');
+
+      // إعداد معاينة الصورة
+      attachImagePreview(formEl.image, document.getElementById('centerImagePreview'));
+
+      // إضافة رسائل تحقق عربية
+      applyArabicValidation(formEl);
+
+      formEl.addEventListener('submit', e => {
         e.preventDefault();
         const form = e.target;
         const newCenter = {
@@ -426,7 +516,8 @@
           city: form.city.value,
           address: form.address.value,
           phone: form.phone.value,
-          devices: form.devices.value.split(',').map(d => d.trim()).filter(Boolean)
+          devices: form.devices.value.split(',').map(d => d.trim()).filter(Boolean),
+          image: document.getElementById('centerImagePreview').src || ''
         };
         centers.push(newCenter);
         save('centers', centers);
@@ -478,19 +569,26 @@
           <input required name="institution" placeholder="المؤسسة">
           <label>ملخص</label>
           <textarea name="summary" placeholder="ملخص البحث"></textarea>
+          <label>صورة البحث</label>
+          <input type="file" name="image" accept="image/*" id="researchImageInp">
+          <img id="researchImagePreview" class="img-preview">
           <button type="submit" class="primary-btn">حفظ</button>
         </form>
         <button onclick="closeModal()" class="primary-btn" style="background:#ccc;color:#000;margin-top:10px;">إلغاء</button>
       `;
       showModal(html);
-      document.getElementById('researchForm').addEventListener('submit', e => {
+      const rForm = document.getElementById('researchForm');
+      attachImagePreview(rForm.image, document.getElementById('researchImagePreview'));
+      applyArabicValidation(rForm);
+      rForm.addEventListener('submit', e => {
         e.preventDefault();
         const form = e.target;
         const item = {
           title: form.title.value,
           researcher: form.researcher.value,
           institution: form.institution.value,
-          summary: form.summary.value
+          summary: form.summary.value,
+          image: document.getElementById('researchImagePreview').src || ''
         };
         research.push(item);
         save('research', research);
@@ -542,12 +640,18 @@
           <input name="creditHours" placeholder="عدد الساعات">
           <label>وصف</label>
           <textarea name="description" placeholder="وصف المقرر"></textarea>
+          <label>صورة المقرر</label>
+          <input type="file" name="image" accept="image/*" id="courseImageInp">
+          <img id="courseImagePreview" class="img-preview">
           <button type="submit" class="primary-btn">حفظ</button>
         </form>
         <button onclick="closeModal()" class="primary-btn" style="background:#ccc;color:#000;margin-top:10px;">إلغاء</button>
       `;
       showModal(html);
-      document.getElementById('courseForm').addEventListener('submit', e => {
+      const cForm = document.getElementById('courseForm');
+      attachImagePreview(cForm.image, document.getElementById('courseImagePreview'));
+      applyArabicValidation(cForm);
+      cForm.addEventListener('submit', e => {
         e.preventDefault();
         const form = e.target;
         const item = {
@@ -555,6 +659,7 @@
           provider: form.provider.value,
           creditHours: form.creditHours.value,
           description: form.description.value,
+          image: document.getElementById('courseImagePreview').src || ''
         };
         courses.push(item);
         save('courses', courses);
@@ -606,12 +711,18 @@
           <input name="purchaseDate" type="date" placeholder="تاريخ الشراء">
           <label>المورد</label>
           <input name="vendor" placeholder="المورد">
+          <label>صورة الجهاز</label>
+          <input type="file" name="image" accept="image/*" id="equipImageInp">
+          <img id="equipImagePreview" class="img-preview">
           <button type="submit" class="primary-btn">حفظ</button>
         </form>
         <button onclick="closeModal()" class="primary-btn" style="background:#ccc;color:#000;margin-top:10px;">إلغاء</button>
       `;
       showModal(html);
-      document.getElementById('equipmentForm').addEventListener('submit', e => {
+      const eForm = document.getElementById('equipmentForm');
+      attachImagePreview(eForm.image, document.getElementById('equipImagePreview'));
+      applyArabicValidation(eForm);
+      eForm.addEventListener('submit', e => {
         e.preventDefault();
         const form = e.target;
         const item = {
@@ -619,6 +730,7 @@
           category: form.category.value,
           purchaseDate: form.purchaseDate.value,
           vendor: form.vendor.value,
+          image: document.getElementById('equipImagePreview').src || ''
         };
         equipment.push(item);
         save('equipment', equipment);
@@ -644,6 +756,10 @@
           <input name="device" placeholder="الجهاز">
           <label>اسم الأخصائي/الباحث</label>
           <input name="person" placeholder="الأخصائي/الباحث">
+          <label>تاريخ شراء الجهاز (من)</label>
+          <input type="date" name="pFrom">
+          <label>تاريخ شراء الجهاز (إلى)</label>
+          <input type="date" name="pTo">
           <button type="submit" class="primary-btn">بحث</button>
         </form>
         <button onclick="closeModal()" class="primary-btn" style="background:#ccc;color:#000;margin-top:10px;">إلغاء</button>
@@ -652,11 +768,9 @@
       document.getElementById('advSearchForm').addEventListener('submit', e => {
         e.preventDefault();
         const form = e.target;
-        const city = form.city.value.trim();
-        const device = form.device.value.trim();
-        const person = form.person.value.trim();
-        renderCentersAdvanced(city, device);
-        renderResearchAdvanced(person);
+        renderCentersAdvanced(form.city.value.trim(), form.device.value.trim());
+        renderResearchAdvanced(form.person.value.trim());
+        renderEquipmentAdvanced(form.pFrom.value, form.pTo.value);
         closeModal();
       });
     }
@@ -708,6 +822,42 @@
       });
     }
 
+    function renderEquipmentAdvanced(fromDate = '', toDate = '') {
+      const wrapper = document.getElementById('equipmentList');
+      wrapper.innerHTML = '';
+      const from = fromDate ? new Date(fromDate) : null;
+      const to = toDate ? new Date(toDate) : null;
+      const rows = equipment.filter(eq => {
+        if (!from && !to) return true;
+        const d = eq.purchaseDate ? new Date(eq.purchaseDate) : null;
+        if (!d) return false;
+        if (from && d < from) return false;
+        if (to && d > to) return false;
+        return true;
+      });
+      if (!rows.length) {
+        wrapper.innerHTML = '<p>لا توجد أجهزة مطابقة لبحثك.</p>';
+        return;
+      }
+      rows.forEach((eItem, idx) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `<h3>${eItem.name}</h3><p>${eItem.category}</p>`;
+        card.addEventListener('click', () => {
+          const html = `
+            ${eItem.image ? `<img src="${eItem.image}" style="width:100%;border-radius:6px;margin-bottom:10px;"/>` : ''}
+            <h3>${eItem.name}</h3>
+            <p><strong>الفئة:</strong> ${eItem.category}</p>
+            <p><strong>تاريخ الشراء:</strong> ${eItem.purchaseDate}</p>
+            <p><strong>المورد:</strong> ${eItem.vendor}</p>
+            <button class="primary-btn" onclick="closeModal()">إغلاق</button>
+          `;
+          showModal(html);
+        });
+        wrapper.appendChild(card);
+      });
+    }
+
     /* ---------------------------------------------
        Initial Render
     ---------------------------------------------*/
@@ -715,7 +865,11 @@
     renderResearch();
     renderCourses();
     renderEquipment();
+    updateStats();
   </script>
+
+  <!-- مكتبة الرسم البياني -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <footer>
     <small>© 2025 وزارة الصحة اليمنية - وحدة العلاج الطبيعي</small>
