@@ -233,6 +233,14 @@
     .stat-card { background:#fff; padding:15px 25px; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); text-align:center; min-width:120px; }
     .stat-card h3 { font-size:1.5rem; color:#0059b3; margin-bottom:5px; }
     .img-preview { width:100%; margin-top:10px; border-radius:6px; display:none; }
+    /* Loader */
+    #loaderOverlay {position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.7);display:flex;align-items:center;justify-content:center;z-index:2000;visibility:hidden;opacity:0;transition:opacity 0.3s;}
+    #loaderOverlay.active{visibility:visible;opacity:1;}
+    .spinner{border:6px solid #f3f3f3;border-top:6px solid #0059b3;border-radius:50%;width:50px;height:50px;animation:spin 1s linear infinite;}
+    @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+    /* Card fade-in */
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+    .card{animation:fadeIn 0.4s ease-out;}
     @keyframes zoomIn { from {transform:scale(0.8); opacity:0;} to {transform:scale(1); opacity:1;} }
     .modal { animation: zoomIn 0.25s ease-out; }
   </style>
@@ -262,6 +270,7 @@
       <h2>النظام المركزي</h2>
       <input id="searchInput" type="search" placeholder="ابحث في النظام..." />
       <button id="advancedSearchBtn" class="primary-btn">بحث متقدم</button>
+      <button id="exportBtn" class="primary-btn" style="background:#28a745;">تصدير</button>
     </header>
 
     <!-- Dashboard Section -->
@@ -318,6 +327,9 @@
     <div class="modal"></div>
   </div>
 
+  <!-- Loader Overlay -->
+  <div id="loaderOverlay"><div class="spinner"></div></div>
+
   <!-- =============================================
        Scripts
   ============================================== -->
@@ -330,9 +342,19 @@
     const courses = JSON.parse(localStorage.getItem('courses') || '[]');
     const equipment = JSON.parse(localStorage.getItem('equipment') || '[]');
 
+    /* ---------------------------------------------
+       Loader Helpers
+    ---------------------------------------------*/
+    function showLoader(){ document.getElementById('loaderOverlay').classList.add('active'); }
+    function hideLoader(){ document.getElementById('loaderOverlay').classList.remove('active'); }
+
     function save(key, data) {
-      localStorage.setItem(key, JSON.stringify(data));
-      updateStats();
+      showLoader();
+      setTimeout(()=>{
+        localStorage.setItem(key, JSON.stringify(data));
+        updateStats();
+        hideLoader();
+      },300);
     }
 
     /* ----------------------------------------------------
@@ -473,6 +495,8 @@
         <p><strong>الهاتف:</strong> ${c.phone}</p>
         <h4>الأجهزة المتوفرة:</h4>
         <ul>${c.devices.map(d => `<li>${d}</li>`).join('')}</ul>
+        <button class="primary-btn" onclick="printCurrentModal()">طباعة</button>
+        <button class="primary-btn" style="background:#b30000" onclick="deleteCenter(${idx})">حذف</button>
         <button class="primary-btn" onclick="closeModal()">إغلاق</button>
       `;
       showModal(html);
@@ -691,6 +715,8 @@
             <p><strong>الفئة:</strong> ${eItem.category}</p>
             <p><strong>تاريخ الشراء:</strong> ${eItem.purchaseDate}</p>
             <p><strong>المورد:</strong> ${eItem.vendor}</p>
+            <button class="primary-btn" onclick="printCurrentModal()">طباعة</button>
+            <button class="primary-btn" style="background:#b30000" onclick="deleteEquipment(${idx})">حذف</button>
             <button class="primary-btn" onclick="closeModal()">إغلاق</button>
           `;
           showModal(html);
@@ -859,6 +885,29 @@
     }
 
     /* ---------------------------------------------
+       Export CSV
+    ---------------------------------------------*/
+    document.getElementById('exportBtn').addEventListener('click', exportCurrentSection);
+
+    function toCSV(rows){ return rows.map(r=>r.map(c=>`"${c.replace(/"/g,'""')}"`).join(',')).join('\n'); }
+
+    function exportCurrentSection(){
+      const activeSec = document.querySelector('.section.active').id;
+      let csv=''; let filename='export.csv';
+      if(activeSec==='centersSection'){
+        csv = toCSV([['الاسم','المدينة','الهاتف'], ...centers.map(c=>[c.name,c.city,c.phone])]); filename='centers.csv';
+      } else if(activeSec==='equipmentSection'){
+        csv = toCSV([['الاسم','الفئة','تاريخ الشراء'], ...equipment.map(e=>[e.name,e.category,e.purchaseDate])]); filename='equipment.csv';
+      } else if(activeSec==='researchSection'){
+        csv = toCSV([['العنوان','الباحث'], ...research.map(r=>[r.title,r.researcher])]); filename='research.csv';
+      } else if(activeSec==='coursesSection'){
+        csv = toCSV([['الاسم','المقدم'], ...courses.map(c=>[c.name,c.provider])]); filename='courses.csv';
+      } else { alert('لا يوجد بيانات للتصدير'); return; }
+      const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+      const link=document.createElement('a'); link.href=URL.createObjectURL(blob); link.download=filename; link.click();
+    }
+
+    /* ---------------------------------------------
        Initial Render
     ---------------------------------------------*/
     renderCenters();
@@ -866,6 +915,7 @@
     renderCourses();
     renderEquipment();
     updateStats();
+    hideLoader(); // Hide loader after initial render
   </script>
 
   <!-- مكتبة الرسم البياني -->
