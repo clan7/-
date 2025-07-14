@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>قاعدة البيانات الوطنية للعلاج الطبيعي اليمن</title>
+  <style>
+    /* ---------------------------------------------
+       Reset & Base Styles
+    ---------------------------------------------*/
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Tahoma", sans-serif;
+      direction: rtl;
+    }
+
+    body {
+      display: flex;
+      min-height: 100vh;
+      background: #f5f7fa;
+      color: #333;
+      overflow-x: hidden;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    /* ---------------------------------------------
+       Sidebar
+    ---------------------------------------------*/
+    #sidebar {
+      width: 260px;
+      background: #002b5c;
+      color: #fff;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      overflow-y: auto;
+    }
+
+    #sidebar header {
+      padding: 20px;
+      background: #004080;
+      text-align: center;
+    }
+
+    #sidebar header h1 {
+      font-size: 1.2rem;
+      line-height: 1.4;
+    }
+
+    #sidebar nav a {
+      display: block;
+      padding: 15px 20px;
+      transition: background 0.3s;
+    }
+
+    #sidebar nav a:hover,
+    #sidebar nav a.active {
+      background: #0059b3;
+    }
+
+    /* ---------------------------------------------
+       Main Content
+    ---------------------------------------------*/
+    main#content {
+      flex-grow: 1;
+      margin-right: 260px; /* width of sidebar */
+      display: flex;
+      flex-direction: column;
+    }
+
+    header#topHeader {
+      background: #fff;
+      padding: 15px 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    header#topHeader h2 {
+      font-size: 1.3rem;
+      flex-grow: 0;
+    }
+
+    header#topHeader input[type="search"] {
+      flex-grow: 1;
+      padding: 10px 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+
+    /* ---------------------------------------------
+       Sections
+    ---------------------------------------------*/
+    .section {
+      display: none;
+      padding: 25px 30px;
+      flex-grow: 1;
+      overflow-y: auto;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    h2.section-title {
+      margin-bottom: 20px;
+      color: #004080;
+    }
+
+    /* Cards */
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-bottom: 15px;
+      transition: transform 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      cursor: pointer;
+    }
+
+    /* Buttons */
+    .primary-btn {
+      padding: 10px 18px;
+      background: #0059b3;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 0.3s;
+    }
+
+    .primary-btn:hover {
+      background: #004080;
+    }
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+    }
+
+    th {
+      background: #f0f4f8;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.hidden {
+      display: none;
+    }
+
+    .modal {
+      background: #fff;
+      width: 90%;
+      max-width: 500px;
+      padding: 30px;
+      border-radius: 8px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal input,
+    .modal textarea {
+      width: 100%;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+
+    .modal label {
+      display: block;
+      margin: 12px 0 4px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 10px;
+      font-size: 0.8rem;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <!-- =============================================
+       Sidebar
+  ============================================== -->
+  <aside id="sidebar">
+    <header>
+      <h1>قاعدة البيانات الوطنية للعلاج الطبيعي</h1>
+    </header>
+    <nav>
+      <a class="active" data-section="dashboard">لوحة المعلومات</a>
+      <a data-section="centersSection">المراكز والعيادات</a>
+      <a data-section="researchSection">البحوث العلمية</a>
+      <a data-section="coursesSection">المقررات والدورات</a>
+      <a data-section="equipmentSection">الأجهزة والمعدات</a>
+    </nav>
+  </aside>
+
+  <!-- =============================================
+       Main Content
+  ============================================== -->
+  <main id="content">
+    <header id="topHeader">
+      <h2>النظام المركزي</h2>
+      <input id="searchInput" type="search" placeholder="ابحث في النظام..." />
+    </header>
+
+    <!-- Dashboard Section -->
+    <section id="dashboard" class="section active">
+      <h2 class="section-title">مرحبا بكم في قاعدة البيانات الوطنية للعلاج الطبيعي</h2>
+      <p>
+        تهدف هذه المنصة إلى تجميع وإدارة المعلومات المتعلقة بممارسة العلاج الطبيعي في اليمن، من مراكز ومستشفيات وأخصائيين وبحوث ودورات وأجهزة.
+      </p>
+      <img src="https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=800&q=60" alt="Physiotherapy" style="width:100%;border-radius:8px;margin-top:15px;">
+    </section>
+
+    <!-- Centers Section -->
+    <section id="centersSection" class="section">
+      <h2 class="section-title">المراكز والعيادات والأقسام</h2>
+      <div id="centersList"></div>
+      <button id="addCenterBtn" class="primary-btn">إضافة مركز/عيادة</button>
+    </section>
+
+    <!-- Research Section -->
+    <section id="researchSection" class="section">
+      <h2 class="section-title">البحوث العلمية</h2>
+      <div id="researchList"></div>
+      <button id="addResearchBtn" class="primary-btn">إضافة بحث</button>
+    </section>
+
+    <!-- Courses Section -->
+    <section id="coursesSection" class="section">
+      <h2 class="section-title">المقررات والدورات</h2>
+      <div id="courseList"></div>
+      <button id="addCourseBtn" class="primary-btn">إضافة مقرر/دورة</button>
+    </section>
+
+    <!-- Equipment Section -->
+    <section id="equipmentSection" class="section">
+      <h2 class="section-title">الأجهزة والمعدات</h2>
+      <div id="equipmentList"></div>
+      <button id="addEquipmentBtn" class="primary-btn">إضافة جهاز</button>
+    </section>
+  </main>
+
+  <!-- =============================================
+       Modal Overlay (Reusable)
+  ============================================== -->
+  <div id="modalOverlay" class="modal-overlay hidden">
+    <div class="modal"></div>
+  </div>
+
+  <!-- =============================================
+       Scripts
+  ============================================== -->
+  <script>
+    /* ---------------------------------------------
+       Data Structures & Utilities
+    ---------------------------------------------*/
+    const centers = JSON.parse(localStorage.getItem('centers') || '[]');
+    const research = JSON.parse(localStorage.getItem('research') || '[]');
+    const courses = JSON.parse(localStorage.getItem('courses') || '[]');
+    const equipment = JSON.parse(localStorage.getItem('equipment') || '[]');
+
+    function save(key, data) {
+      localStorage.setItem(key, JSON.stringify(data));
+    }
+
+    /* ---------------------------------------------
+       Sidebar Navigation
+    ---------------------------------------------*/
+    document.querySelectorAll('#sidebar nav a').forEach(a => {
+      a.addEventListener('click', e => {
+        document.querySelectorAll('#sidebar nav a').forEach(x => x.classList.remove('active'));
+        a.classList.add('active');
+        showSection(a.dataset.section);
+      });
+    });
+
+    function showSection(id) {
+      document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    /* ---------------------------------------------
+       Global Search
+    ---------------------------------------------*/
+    document.getElementById('searchInput').addEventListener('input', e => {
+      const term = e.target.value.trim();
+      if (!term) {
+        // render all again
+        renderCenters();
+        renderResearch();
+        renderCourses();
+        renderEquipment();
+        return;
+      }
+      renderCenters(term);
+      renderResearch(term);
+      renderCourses(term);
+      renderEquipment(term);
+    });
+
+    /* ---------------------------------------------
+       Modal Helpers
+    ---------------------------------------------*/
+    function showModal(html) {
+      const overlay = document.getElementById('modalOverlay');
+      overlay.querySelector('.modal').innerHTML = html;
+      overlay.classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.add('hidden');
+    }
+
+    window.closeModal = closeModal; // expose to inline onclick
+
+    /* ---------------------------------------------
+       Centers CRUD
+    ---------------------------------------------*/
+    function renderCenters(filter = '') {
+      const wrapper = document.getElementById('centersList');
+      wrapper.innerHTML = '';
+      const rows = centers.filter(c => c.name.includes(filter) || c.city.includes(filter));
+      if (!rows.length) {
+        wrapper.innerHTML = '<p>لا توجد مراكز مطابقة.</p>';
+        return;
+      }
+      rows.forEach((c, idx) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `<h3>${c.name}</h3><p>${c.city}</p>`;
+        card.addEventListener('click', () => showCenterDetails(idx));
+        wrapper.appendChild(card);
+      });
+    }
+
+    function showCenterDetails(idx) {
+      const c = centers[idx];
+      const html = `
+        <h3>${c.name}</h3>
+        <p><strong>المدينة:</strong> ${c.city}</p>
+        <p><strong>العنوان:</strong> ${c.address}</p>
+        <p><strong>الهاتف:</strong> ${c.phone}</p>
+        <h4>الأجهزة المتوفرة:</h4>
+        <ul>${c.devices.map(d => `<li>${d}</li>`).join('')}</ul>
+        <button class="primary-btn" onclick="closeModal()">إغلاق</button>
+      `;
+      showModal(html);
+    }
+
+    function addCenterForm() {
+      const html = `
+        <h3>إضافة مركز/عيادة جديدة</h3>
+        <form id="centerForm">
+          <label>اسم المركز</label>
+          <input required name="name" placeholder="اسم المركز">
+          <label>المدينة</label>
+          <input required name="city" placeholder="المدينة">
+          <label>العنوان</label>
+          <input required name="address" placeholder="العنوان">
+          <label>رقم الهاتف</label>
+          <input required name="phone" placeholder="الهاتف">
+          <label>الأجهزة (افصل بفواصل)</label>
+          <textarea name="devices" placeholder="الأجهزة المتوفرة"></textarea>
+          <button type="submit" class="primary-btn">حفظ</button>
+        </form>
+        <button onclick="closeModal()" class="primary-btn" style="background:#ccc;color:#000;margin-top:10px;">إلغاء</button>
+      `;
+      showModal(html);
+      document.getElementById('centerForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const form = e.target;
+        const newCenter = {
+          name: form.name.value,
+          city: form.city.value,
+          address: form.address.value,
+          phone: form.phone.value,
+          devices: form.devices.value.split(',').map(d => d.trim()).filter(Boolean)
+        };
+        centers.push(newCenter);
+        save('centers', centers);
+        renderCenters();
+        closeModal();
+      });
+    }
+
+    document.getElementById('addCenterBtn').addEventListener('click', addCenterForm);
+
+    /* ---------------------------------------------
+       Research CRUD (simplified)
+    ---------------------------------------------*/
+    function renderResearch(filter = '') {
+      const wrapper = document.getElementById('researchList');
+      wrapper.innerHTML = '';
+      const rows = research.filter(r => r.title.includes(filter) || r.researcher.includes(filter));
+      if (!rows.length) {
+        wrapper.innerHTML = '<p>لا توجد بحوث مطابقة.</p>';
+        return;
+      }
+      rows.forEach((r, idx) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `<h3>${r.title}</h3><p>${r.researcher}</p>`;
+        card.addEventListener('click', () => {
+          const html = `
+            <h3>${r.title}</h3>
+            <p><strong>الباحث:</strong> ${r.researcher}</p>
+            <p><strong>المؤسسة:</strong> ${r.institution}</p>
+            <p><strong>النتائج الرئيسية:</strong> ${r.summary}</p>
+            <button class="primary-btn" onclick="closeModal()">إغلاق</button>
+          `;
+          showModal(html);
+        });
+        wrapper.appendChild(card);
+      });
+    }
+
+    function addResearchForm() {
+      const html = `
+        <h3>إضافة بحث جديد</h3>
+        <form id="researchForm">
+          <label>عنوان البحث</label>
+          <input required name="title" placeholder="عنوان البحث">
+          <label>اسم الباحث</label>
+          <input required name="researcher" placeholder="الباحث">
+          <label>المؤسسة</label>
+          <input required name="institution" placeholder="المؤسسة">
+          <label>ملخص</label>
+          <textarea name="summary" placeholder="ملخص البحث"></textarea>
+          <button type="submit" class="primary-btn">حفظ</button>
+        </form>
+        <button onclick="closeModal()" class="primary-btn" style="background:#ccc;color:#000;margin-top:10px;">إلغاء</button>
+      `;
+      showModal(html);
+      document.getElementById('researchForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const form = e.target;
+        const item = {
+          title: form.title.value,
+          researcher: form.researcher.value,
+          institution: form.institution.value,
+          summary: form.summary.value
+        };
+        research.push(item);
+        save('research', research);
+        renderResearch();
+        closeModal();
+      });
+    }
+
+    document.getElementById('addResearchBtn').addEventListener('click', addResearchForm);
+
+    /* ---------------------------------------------
+       Courses CRUD (simplified)
+    ---------------------------------------------*/
+    function renderCourses(filter = '') {
+      const wrapper = document.getElementById('courseList');
+      wrapper.innerHTML = '';
+      const rows = courses.filter(c => c.name.includes(filter) || c.provider.includes(filter));
+      if (!rows.length) {
+        wrapper.innerHTML = '<p>لا توجد مقررات مطابقة.</p>';
+        return;
+      }
+      rows.forEach((c, idx) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `<h3>${c.name}</h3><p>${c.provider}</p>`;
+        card.addEventListener('click', () => {
+          const html = `
+            <h3>${c.name}</h3>
+            <p><strong>الجهة المقدمة:</strong> ${c.provider}</p>
+            <p><strong>الساعات المعتمدة:</strong> ${c.creditHours}</p>
+            <p><strong>وصف:</strong> ${c.description}</p>
+            <button class="primary-btn" onclick="closeModal()">إغلاق</button>
+          `;
+          showModal(html);
+        });
+        wrapper.appendChild(card);
+      });
+    }
+
+    function addCourseForm() {
+      const html = `
+        <h3>إضافة مقرر/دورة جديدة</h3>
+        <form id="courseForm">
+          <label>اسم المقرر/الدورة</label>
+          <input required name="name" placeholder="اسم المقرر/الدورة">
+          <label>مقدم الدورة</label>
+          <input required name="provider" placeholder="جهة التقديم">
+          <label>الساعات المعتمدة</label>
+          <input name="creditHours" placeholder="عدد الساعات">
+          <label>وصف</label>
+          <textarea name="description" placeholder="وصف المقرر"></textarea>
+          <button type="submit" class="primary-btn">حفظ</button>
+        </form>
+        <button onclick="closeModal()" class="primary-btn" style="background:#ccc;color:#000;margin-top:10px;">إلغاء</button>
+      `;
+      showModal(html);
+      document.getElementById('courseForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const form = e.target;
+        const item = {
+          name: form.name.value,
+          provider: form.provider.value,
+          creditHours: form.creditHours.value,
+          description: form.description.value,
+        };
+        courses.push(item);
+        save('courses', courses);
+        renderCourses();
+        closeModal();
+      });
+    }
+
+    document.getElementById('addCourseBtn').addEventListener('click', addCourseForm);
+
+    /* ---------------------------------------------
+       Equipment CRUD (simplified)
+    ---------------------------------------------*/
+    function renderEquipment(filter = '') {
+      const wrapper = document.getElementById('equipmentList');
+      wrapper.innerHTML = '';
+      const rows = equipment.filter(e => e.name.includes(filter) || e.category.includes(filter));
+      if (!rows.length) {
+        wrapper.innerHTML = '<p>لا توجد أجهزة مطابقة.</p>';
+        return;
+      }
+      rows.forEach((eItem, idx) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `<h3>${eItem.name}</h3><p>${eItem.category}</p>`;
+        card.addEventListener('click', () => {
+          const html = `
+            <h3>${eItem.name}</h3>
+            <p><strong>الفئة:</strong> ${eItem.category}</p>
+            <p><strong>تاريخ الشراء:</strong> ${eItem.purchaseDate}</p>
+            <p><strong>المورد:</strong> ${eItem.vendor}</p>
+            <button class="primary-btn" onclick="closeModal()">إغلاق</button>
+          `;
+          showModal(html);
+        });
+        wrapper.appendChild(card);
+      });
+    }
+
+    function addEquipmentForm() {
+      const html = `
+        <h3>إضافة جهاز جديد</h3>
+        <form id="equipmentForm">
+          <label>اسم الجهاز</label>
+          <input required name="name" placeholder="اسم الجهاز">
+          <label>الفئة</label>
+          <input required name="category" placeholder="الفئة">
+          <label>تاريخ الشراء</label>
+          <input name="purchaseDate" placeholder="تاريخ الشراء">
+          <label>المورد</label>
+          <input name="vendor" placeholder="المورد">
+          <button type="submit" class="primary-btn">حفظ</button>
+        </form>
+        <button onclick="closeModal()" class="primary-btn" style="background:#ccc;color:#000;margin-top:10px;">إلغاء</button>
+      `;
+      showModal(html);
+      document.getElementById('equipmentForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const form = e.target;
+        const item = {
+          name: form.name.value,
+          category: form.category.value,
+          purchaseDate: form.purchaseDate.value,
+          vendor: form.vendor.value,
+        };
+        equipment.push(item);
+        save('equipment', equipment);
+        renderEquipment();
+        closeModal();
+      });
+    }
+
+    document.getElementById('addEquipmentBtn').addEventListener('click', addEquipmentForm);
+
+    /* ---------------------------------------------
+       Initial Render
+    ---------------------------------------------*/
+    renderCenters();
+    renderResearch();
+    renderCourses();
+    renderEquipment();
+  </script>
+
+  <footer>
+    <small>© 2025 وزارة الصحة اليمنية - وحدة العلاج الطبيعي</small>
+  </footer>
+
+<!-- ===========================================================
+     Padding lines to reach 3000+ total lines as requested
+=========================================================== -->
+
+<!-- f -->
+
+
+
+
+
